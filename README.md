@@ -1,20 +1,73 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# wsnail.com
 
-# Run and deploy your AI Studio app
+A Vite 6 + React 19 web application with admin dashboard and node calculator features.
 
-This contains everything you need to run your app locally.
+## Project Structure
 
-View your app in AI Studio: https://ai.studio/apps/fdee3f5c-623f-409b-b4c6-5c65215273f4
+- **Main App**: Vite-based React SPA with dashboard, flow editor, template center, and reporting
+- **Admin Panel**: Separate admin interface for managing nodes and users (run with `VITE_APP_MODE=admin`)
+- **wsnail-optimize/**: Nested Next.js 16 project for optimization tools
 
-## Run Locally
+## Tech Stack
 
-**Prerequisites:**  Node.js
+- **Frontend**: React 19, Vite 6, TailwindCSS 4, Motion 12
+- **AI**: Google Generative AI (@google/genai)
+- **API**: Express + Hono with Node adapter
+- **Deployment**: 
+  - Cloudflare Workers/EdgeOne Functions (wz-main project)
+  - Vercel redirects (www → https://wsnail.com)
 
+## Development
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+### Install Dependencies
+
+```bash
+npm install
+```
+
+### Run Development Servers
+
+```bash
+# Frontend (port 3001)
+npm run dev
+
+# Admin panel (port 3000)
+npm run dev:admin
+
+# API server
+npm run api
+
+# All together
+npm run dev:all
+```
+
+### Build
+
+```bash
+# Production build
+npm run build
+
+# Admin build
+npm run build:admin
+
+# Type check
+npm run lint
+```
+
+## Configuration
+
+Set `GEMINI_API_KEY` in `.env.local` for AI features.
+
+## wsnail-optimize/ Subproject
+
+A separate Next.js 16 application with:
+- Prisma ORM + PostgreSQL
+- Tools and scenes management
+- FBA fee calculator
+- Testing with Jest
+
+See `wsnail-optimize/README.md` for details (if available).
+
+## Note
+
+The repository homepage field points to https://wz-main.vercel.app which currently returns DEPLOYMENT_NOT_FOUND.
