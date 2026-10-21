@@ -1,3 +1,5 @@
+> **说明**：本仓库原名 `wsnail-com`，已改名为 `kanban-wsnail-com`，对应看板子站 https://kanban.wsnail.com / 看板·工具后台。主站「桌间漫游」镜像见仓库 `wsnail-com`（https://wsnail.com）。
+
 # wsnail.com
 
 A Vite 6 + React 19 web application with admin dashboard and node calculator features.
