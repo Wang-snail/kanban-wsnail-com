@@ -1,12 +1,15 @@
 /**
- * POST /api/nodes/:id/unpublish — 取消发布（设为草稿）
+ * POST /api/nodes/:id/unpublish — 取消发布（设为草稿）（需 X-Admin-Token）
  */
-import { ok, err, preflight, kvGetNodes, kvSaveNodes, type Env } from '../_shared';
+import { ok, err, preflight, requireAdmin, kvGetNodes, kvSaveNodes, type Env } from '../_shared';
 
 export async function onRequest(context: EventContext<Env, string, { id: string }>) {
   const { request, env, params } = context;
   if (request.method === 'OPTIONS') return preflight();
   if (request.method !== 'POST') return err('Method not allowed', 405);
+
+  const denied = requireAdmin(request, env);
+  if (denied) return denied;
 
   const kv = env.NODES_KV;
   if (!kv) return err('KV storage not configured', 503);

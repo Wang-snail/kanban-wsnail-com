@@ -1,0 +1,19 @@
+{
+  "name": "WSNAIL Amazon",
+  "short_name": "WSNAIL",
+  "description": "亚马逊电商全业务节点与流程编排平台",
+  "lang": "zh-CN",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f7f9fa",
+  "theme_color": "#006c4c",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

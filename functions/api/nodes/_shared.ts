@@ -8,7 +8,7 @@
 export const CORS: Record<string, string> = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type',
+  'Access-Control-Allow-Headers': 'Content-Type, X-Admin-Token',
 };
 
 export function cors(res: Response): Response {
@@ -61,20 +61,68 @@ export interface KVNamespace {
   delete(key: string): Promise<void>;
 }
 
+export interface D1PreparedStatement {
+  bind(...values: unknown[]): D1PreparedStatement;
+  run(): Promise<unknown>;
+  first<T = unknown>(): Promise<T | null>;
+  all<T = unknown>(): Promise<{ results: T[] }>;
+}
+
+export interface D1Database {
+  prepare(query: string): D1PreparedStatement;
+}
+
 export interface Env {
   NODES_KV?: KVNamespace;
+  ANALYTICS_DB?: D1Database;
+  NODES_ADMIN_TOKEN?: string;
+  NODES_MIN_PUBLISHED?: string;
+  NODES_HEALTH_AUTORESTORE?: string;
+}
+
+// ─── Auth (X-Admin-Token / NODES_ADMIN_TOKEN) ─────────────────────────────────
+function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let out = 0;
+  for (let i = 0; i < a.length; i++) out |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return out === 0;
+}
+
+/**
+ * 管理接口鉴权。线上行为：无/错 token → 401 {"success":false,"error":"Unauthorized"}
+ * 请求头：X-Admin-Token；环境变量：NODES_ADMIN_TOKEN
+ * 返回 null 表示通过；返回 Response 表示应直接返回给客户端。
+ */
+export function requireAdmin(request: Request, env: Env): Response | null {
+  const adminToken = env.NODES_ADMIN_TOKEN;
+  if (!adminToken) {
+    // 未配置视为拒绝，避免裸奔；不泄露具体原因给客户端
+    return err('Unauthorized', 401);
+  }
+  const provided = request.headers.get('X-Admin-Token') || '';
+  if (!provided || !timingSafeEqual(provided, adminToken)) {
+    return err('Unauthorized', 401);
+  }
+  return null;
 }
 
 // ─── KV helpers ───────────────────────────────────────────────────────────────
 const KV_KEY = 'nodes';
 
+/**
+ * 只读获取节点。KV 为空时回退 SEED，但**不会**自动写入 KV，
+ * 避免预览/新环境误用旧 N-001 Seed 覆盖线上 F02/Q06… 数据。
+ * 需要写入时请走 reset（需鉴权）或 health autorestore。
+ */
 export async function kvGetNodes(kv: KVNamespace): Promise<AppNode[]> {
   const raw = await kv.get(KV_KEY);
   if (raw) {
-    try { return JSON.parse(raw) as AppNode[]; } catch { /* fall through */ }
+    try {
+      return JSON.parse(raw) as AppNode[];
+    } catch {
+      /* fall through */
+    }
   }
-  // First access: initialise with seed data
-  await kv.put(KV_KEY, JSON.stringify(SEED_NODES));
   return SEED_NODES;
 }
 
@@ -83,6 +131,8 @@ export async function kvSaveNodes(kv: KVNamespace, nodes: AppNode[]): Promise<vo
 }
 
 // ─── Seed data (19 nodes) ─────────────────────────────────────────────────────
+// 注意：线上生产 KV 节点 id 形如 F02/Q06/A08/C10（约 26 个），
+// 本 SEED 仅作本地/空 KV 回退与鉴权后的 reset 用，切勿对生产误执行 reset。
 export const SEED_NODES: AppNode[] = [
   {
     id: 'N-001', name: '利润计算器', category: '供应链与成本', status: 'published',

@@ -1,6 +1,6 @@
 node_modules/
 build/
-dist/
+# dist/  # tracked: restored live static for Pages (see README)
 coverage/
 .DS_Store
 *.log

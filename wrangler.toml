@@ -6,3 +6,8 @@ pages_build_output_dir = "dist"
 binding = "NODES_KV"
 id = "d09d8db2286041a398a2b94efbcd70bf"
 preview_id = "53d71951a5554046822c948a4270ec21"
+
+[[d1_databases]]
+binding = "ANALYTICS_DB"
+database_name = "po_chat_logs"
+database_id = "204d26ae-e39e-4e38-95d2-9c2eff9ca1af"
