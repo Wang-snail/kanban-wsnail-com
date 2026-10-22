@@ -1,13 +1,16 @@
 /**
- * GET    /api/nodes/:id  — 查询单个节点
- * PUT    /api/nodes/:id  — 更新节点
- * DELETE /api/nodes/:id  — 删除节点
+ * GET    /api/nodes/:id  — 查询单个节点（需 X-Admin-Token）
+ * PUT    /api/nodes/:id  — 更新节点（需 X-Admin-Token）
+ * DELETE /api/nodes/:id  — 删除节点（需 X-Admin-Token）
  */
-import { ok, err, preflight, kvGetNodes, kvSaveNodes, type AppNode, type Env } from '../_shared';
+import { ok, err, preflight, requireAdmin, kvGetNodes, kvSaveNodes, type AppNode, type Env } from '../_shared';
 
 export async function onRequest(context: EventContext<Env, string, { id: string }>) {
   const { request, env, params } = context;
   if (request.method === 'OPTIONS') return preflight();
+
+  const denied = requireAdmin(request, env);
+  if (denied) return denied;
 
   const id = params.id;
   const kv = env.NODES_KV;

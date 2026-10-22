@@ -1,12 +1,15 @@
 /**
- * GET  /api/nodes        — 全量节点列表（后台管理用）
- * POST /api/nodes        — 新增节点
+ * GET  /api/nodes        — 全量节点列表（后台管理用，需 X-Admin-Token）
+ * POST /api/nodes        — 新增节点（需 X-Admin-Token）
  */
-import { ok, err, preflight, kvGetNodes, kvSaveNodes, SEED_NODES, type AppNode, type Env } from './_shared';
+import { ok, err, preflight, requireAdmin, kvGetNodes, kvSaveNodes, SEED_NODES, type AppNode, type Env } from './_shared';
 
 export async function onRequest(context: EventContext<Env, string, {}>) {
   const { request, env } = context;
   if (request.method === 'OPTIONS') return preflight();
+
+  const denied = requireAdmin(request, env);
+  if (denied) return denied;
 
   const kv = env.NODES_KV;
 
