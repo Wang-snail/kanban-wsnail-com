@@ -1,0 +1,40 @@
+name: Deploy to Cloudflare Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cloudflare-pages-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+
+      # dist/ is committed (PR #2 aligned static frontend). Do not rebuild here —
+      # keep production identical to the committed artifact + Pages Functions.
+      - name: Sanity check deploy files
+        run: |
+          test -f dist/index.html
+          test -d functions/api
+          test -f functions/api/health.ts
+          test -f functions/api/nodes/index.ts
+          test -f functions/api/nodes/published.ts
+          test -f functions/api/analytics/track.ts
+
+      - name: Deploy dist/ + functions/ to Cloudflare Pages (wsnail-com, production branch main)
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          wranglerVersion: "4"
+          # wrangler picks up ./functions next to the project root automatically
+          command: pages deploy dist --project-name=wsnail-com --branch=main --commit-dirty=true
